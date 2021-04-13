@@ -21,11 +21,15 @@ membro2 a (x:xs)
     |   otherwise = True
 
 -- 4)
---unico :: [Int] -> [Int]
---unico [] = []
---unico (x:xs)
---    |   membroNum x xs == 1 = x : unico xs
---    |   otherwise = unico xs
+unico :: [Int] -> [Int]
+unico [] = []
+unico (x:xs) = unico2 (x:xs) (x:xs)
+
+unico2 :: [Int] -> [Int] -> [Int]
+unico2 [] (y:ys) = []
+unico2 (x:xs) (y:ys)
+    |   (membroNum x (y:ys) == 1) && (membroNum x xs == 0) = x : unico2 xs (y:ys)
+    |   otherwise = unico2 xs (y:ys)
 
 -- 5)
 quickSort :: [Int] -> [Int]
