@@ -1,4 +1,4 @@
---
+-- 
 
 -- 1)
 membro :: Int -> [Int] -> Bool
@@ -45,5 +45,5 @@ menores a (x:xs)
 maiores :: Int -> [Int] -> [Int]
 maiores a [] = []
 maiores a (x:xs)
-    |   a <= x = x : maiores a xs
+    |   a < x = x : maiores a xs
     |   otherwise = maiores a xs
