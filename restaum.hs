@@ -1,5 +1,11 @@
 --
 
+-- Jogo Resta Um
+
+module RestaUm where
+
+import System.IO
+
 type GBoard = [[Char]]
 
 gBoard :: GBoard
@@ -10,6 +16,34 @@ gBoard = [[' ',' ','*','*','*',' ',' '],
           ['*','*','*','*','*','*','*'],
           [' ',' ','*','*','*',' ',' '],
           [' ',' ','*','*','*',' ',' ']]
+
+tBoard :: GBoard
+tBoard = [[' ',' ','*',' ','*',' ',' '],
+          [' ',' ','*',' ','*',' ',' '],
+          ['*','*','*','*','*','*','*'],
+          ['*',' ','*',' ','*',' ',' '],
+          ['*','*','*','*','*','*','*'],
+          [' ',' ','*',' ','*',' ',' '],
+          [' ',' ','*','*','*',' ',' ']]
+
+umBoard :: GBoard
+umBoard = [[' ',' ',' ',' ',' ',' ',' '],
+          [' ',' ',' ',' ',' ',' ',' '],
+          [' ',' ',' ',' ',' ',' ',' '],
+          [' ',' ',' ','*',' ',' ',' '],
+          [' ',' ',' ',' ',' ',' ',' '],
+          [' ',' ',' ',' ',' ',' ',' '],
+          [' ',' ',' ',' ',' ',' ',' ']]
+
+eBoard :: GBoard
+eBoard = ["  ***  ",
+          "  * *  ",
+          "*** ***",
+          "*******",
+          "*******",
+          "  ***  ",
+          "  ***  "] 
+---------- Tabuleiros de teste -----------------
 
 gArr :: Int -> [t] -> t
 gArr 0 (x:xs) = x
@@ -79,10 +113,46 @@ genTabPositions (x:xs) = genTabPositions2 (x:xs) 0
                          |    otherwise = []
 
 canMove :: GBoard -> Bool
-canMove (x:xs) = 
+canMove (x:xs) = verLinha (x:xs) (genTabPositions (x:xs))
+     where
+          verLinha :: GBoard -> [[(Int,Int)]] -> Bool
+          verLinha (x:xs) [] = False
+          verLinha (x:xs) (p:ps) = (verifica (x:xs) p) || (verLinha (x:xs) ps)
+               where
+                    verifica :: GBoard -> [(Int,Int)] -> Bool
+                    verifica (x:xs) [] = False
+                    verifica (x:xs) (p:ps)
+                         |    not(isEmpty p (x:xs)) && ((validMoves (x:xs) p) /= []) = True
+                         |    otherwise = verifica (x:xs) ps
 
-{-
+restaUm :: GBoard -> Bool
+restaUm (x:xs)
+     |    foldr (+) 0 (map somaSterisco (x:xs)) == 1 = True
+     |    otherwise = False
+     where
+          somaSterisco :: [Char] -> Int
+          somaSterisco [] = 0
+          somaSterisco (x:xs)
+               |    x == '*' = 1 + somaSterisco xs
+               |    otherwise = somaSterisco xs
 
+printBoard :: GBoard -> String
+printBoard (x:xs) = cabecalho ((length x)-1) ++ corpo ((length (x:xs))-1) (reverse(x:xs))
+     where
+          cabecalho :: Int -> String
+          cabecalho 0 = "\n" ++ "  0"
+          cabecalho n = cabecalho (n-1) ++ " " ++ show n 
+
+          corpo :: Int -> GBoard -> String
+          corpo 0 (x:xs) = "\n" ++ "0 " ++ (corpoEspaco x) ++ "\n"
+          corpo n (x:xs) = corpo (n-1) xs ++ show n ++ " " ++ (corpoEspaco x) ++ "\n"
+
+          corpoEspaco :: [Char] -> String
+          corpoEspaco [] = ""
+          corpoEspaco (x:xs) = x : " " ++ corpoEspaco xs
+
+
+-- Motor do jogo
 main :: IO ()
 main = do
    gameLoop gBoard
@@ -137,4 +207,3 @@ printOpcoes n [] = do
 printOpcoes n (x:xs) = do
                      print (show n ++ ". "++ (show ((head . tail) x)))
 		     printOpcoes (n+1) xs
--}
