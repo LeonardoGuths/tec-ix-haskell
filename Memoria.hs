@@ -8,7 +8,7 @@ import System.Random
 type Carta = [[Char]]
 
 newRand = randomIO :: IO Int
-
+--IntRand = randomR (0, 10) :: newStdGen
 {-
 pegaRandom :: IO ()
 pegaRandom = do
@@ -32,14 +32,28 @@ cartaCifrao :: Carta
 cartaCifrao = [['[','$','$',']'],
                ['[','$','$',']']]
 
+cartaMais :: Carta
+cartaMais = [['[','+','+',']'],
+             ['[','+','+',']']]
+
+cartaInte :: Carta
+cartaInte = [['[','?','?',']'],
+             ['[','?','?',']']]
+
 tBase :: [Carta]
 tBase = [cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC]
+
+tBase16 :: [Carta]
+tBase16 = [cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC, cartaC]
 
 tabuleiroV :: [Carta]
 tabuleiroV = [cartaV, cartaV, cartaV, cartaV, cartaV, cartaV, cartaV, cartaV]
 
 tabuleiro1 :: [Carta]
-tabuleiro1 = [cartaX, cartaX, cartaCifrao, cartaX, cartaX, cartaCifrao, cartaCifrao, cartaCifrao]
+tabuleiro1 = [cartaX, cartaX, cartaCifrao, cartaInte, cartaMais, cartaCifrao, cartaMais, cartaInte]
+
+tabuleiro16 :: [Carta]
+tabuleiro16 = [cartaX, cartaX, cartaCifrao, cartaInte, cartaMais, cartaCifrao, cartaMais, cartaInte, cartaX, cartaX, cartaCifrao, cartaInte, cartaMais, cartaCifrao, cartaMais, cartaInte]
 
 
 -----------------------------------------------------------
@@ -54,14 +68,6 @@ printaLinha :: [Char] -> String
 printaLinha [] = []
 printaLinha (x:xs) = x : printaLinha xs
 
-------------------------------
-{-
-printaLinha2 :: [Char] -> IO ()
-printaLinha2 x = do
-                 putStr (printaLinha x ++ "\n----")
-                 --hCursorUp stdout 3
--}
-
 printCarta2 :: Int -> Carta -> IO ()
 printCarta2 a [] = do
                     putStr " "
@@ -71,19 +77,21 @@ printCarta2 a (x:xs) = do
                         if (a == 1)
                         then do
                             putStr (printaLinha x ++ " " ++ show a ++ "\n")
-                            --hCursorDown stdout 
-                            --hCursorForward stdout 6
-                            --hCursorDown stdout 1
                             printCarta2 0 xs
                         else do
-                            --hCursorBackward stdout 6
-                            putStr (printaLinha x ++ " " ++ show a)
-                            hCursorDown stdout 1
-                            hCursorBackward stdout 6
-                            printCarta2 0 xs
+                            if (a <= 9)
+                            then do
+                                putStr (printaLinha x ++ " " ++ show a)
+                                hCursorDown stdout 1
+                                hCursorBackward stdout 6
+                                printCarta2 0 xs
+                            else do
+                                putStr (printaLinha x ++ " " ++ show a)
+                                hCursorDown stdout 1
+                                hCursorBackward stdout 7
+                                printCarta2 0 xs
                     else do
                         putStr (printaLinha x)
-                        --hCursor
 
 printT2 :: Int -> [Carta] -> IO ()
 printT2 n [] = do
@@ -91,7 +99,7 @@ printT2 n [] = do
 printT2 n (x:xs) = do
                  printCarta2 n x
                  hCursorUp stdout 1
-                 hCursorForward stdout 8
+                 hCursorForward stdout 6
                  printT2 (n+1) xs
 
 
@@ -111,7 +119,7 @@ restaCartas (x:xs)
 
 posicaoValida :: Int -> Bool
 posicaoValida x 
-    |   x <= 8 && x >=1 = True
+    |   x <= 16 && x >=1 = True
     |   otherwise = False
 
 gArr :: Int -> [t] -> t
@@ -159,20 +167,25 @@ comparaCartas c1 c2
 
 main :: IO ()
 main = do
-   gameLoop tabuleiro1 tBase
+   gameLoop tabuleiro16 tBase16
 
 gameLoop :: [Carta] -> [Carta] -> IO ()
 gameLoop tG tB = do
-  putStr "-------------------------------------------------------------------------------------------------\n" 
+  putStr "\n" 
   if (not (restaCartas tG))
   then do
         --putStr (printBoard gb)
-        print "Voce Venceu!!!"
+        setSGR [SetColor Foreground Vivid Cyan]
+        putStr "VENCEU!!!!!!!!!!!!!!!!\nPARABENS!!!!!!!!!!!!!!!!!!!!!\nTUDO DE BOM!!!!!!!!!!!!!!!!!!!!!\n"
+        setSGR [Reset]
     else do
+        setSGR [SetColor Foreground Vivid Yellow]
+        putStr "--------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
         printT2 1 tB
-        putStr "-------------------------------------------------------------------------------------------------\n" 
+        putStr "--------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
+        setSGR [Reset]
         print "Qual carta voce quer virar?"
-        putStr "Digite uma linha: "
+        putStr "Digite uma carta: "
         carta1 <- getLine
         let c1 = read carta1
         --putStr ("carta escolhida > " ++ soPrinta c1 ++ "\n")
@@ -182,11 +195,14 @@ gameLoop tG tB = do
             if (temCarta c1 tG)
             then do
                 --putStr ("TEM CARTA! " ++ soPrinta c1 ++ "\n")
-                putStr "-------------------------------------------------------------------------------------------------\n" 
+                clearScreen
+                setSGR [SetColor Foreground Vivid Yellow]
+                putStr "--------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
                 printT2 1 (revela1Carta c1 tG tB)
-                putStr "-------------------------------------------------------------------------------------------------\n" 
+                putStr "--------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
+                setSGR [Reset]
                 print "Qual outra carta voce quer virar?"
-                putStr "Digite uma linha: "
+                putStr "Digite uma carta: "
                 carta2 <- getLine
                 let c2 = read carta2
                 putStr ("NOVA carta escolhida > " ++ soPrinta c2 ++ "\n")
@@ -194,19 +210,32 @@ gameLoop tG tB = do
                 then do
                     if (temCarta c2 tG)
                     then do
-                        putStr "-------------------------------------------------------------------------------------------------\n" 
-                        printT2 1 (revela2Carta c1 c2 tG tB)
-                        putStr "-------------------------------------------------------------------------------------------------\n" 
                         if (comparaCartas (retornaCarta c1 tG) (retornaCarta c2 tG))
                         then do
+                            clearScreen
+                            setSGR [SetColor Foreground Vivid Green]
+                            putStr "--------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
+                            printT2 1 (revela2Carta c1 c2 tG tB)
+                            putStr "--------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
+                            setSGR [Reset]
                             putStr ("AS CARTA SAO IGUAL\n")
-                            print "Pressione qualquer tecla para continuar..."
+                            print "continue... >"
                             x <- getLine
+                            clearScreen
+                            --hCursorUp stdout 48
                             gameLoop (removeCartas c1 c2 tG) (removeCartas c1 c2 tB)
                         else do
+                            clearScreen
+                            setSGR [SetColor Foreground Vivid Red]
+                            putStr "--------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
+                            printT2 1 (revela2Carta c1 c2 tG tB)
+                            putStr "--------------------------------------------------------------------------------------------------------------------------------------------------------------\n" 
+                            setSGR [Reset]
                             putStr ("AS CARTA NAO SAO IGUAL\n")
-                            print "Pressione qualquer tecla para continuar..."
+                            print "continue... >"
                             x <- getLine
+                            clearScreen
+                            --hCursorUp stdout 48
                             gameLoop tG tB
                     else do
                         putStr ("C2 TA VAZIA > " ++ soPrinta c2 ++ "\n")
