@@ -7,6 +7,15 @@ import System.Random
 
 type Carta = [[Char]]
 
+newRand = randomIO :: IO Int
+
+{-
+pegaRandom :: IO ()
+pegaRandom = do
+             g <- newStdGen
+             randomR (1, 10) g
+-}
+
 cartaC :: Carta
 cartaC = [['[','-','-',']'],
           ['[','-','-',']']]
@@ -40,10 +49,55 @@ printCarta a [] = []
 printCarta a (x:xs)
     |   xs /= [] = printaLinha x ++ " " ++ show a ++ "\n" ++ printCarta 0 xs
     |   otherwise = printaLinha x ++ "\n----"
-    where
-        printaLinha :: [Char] -> String
-        printaLinha [] = []
-        printaLinha (x:xs) = x : printaLinha xs
+
+printaLinha :: [Char] -> String
+printaLinha [] = []
+printaLinha (x:xs) = x : printaLinha xs
+
+------------------------------
+{-
+printaLinha2 :: [Char] -> IO ()
+printaLinha2 x = do
+                 putStr (printaLinha x ++ "\n----")
+                 --hCursorUp stdout 3
+-}
+
+printCarta2 :: Int -> Carta -> IO ()
+printCarta2 a [] = do
+                    putStr " "
+printCarta2 a (x:xs) = do
+                    if (xs /= [])
+                    then do
+                        if (a == 1)
+                        then do
+                            putStr (printaLinha x ++ " " ++ show a ++ "\n")
+                            --hCursorDown stdout 
+                            --hCursorForward stdout 6
+                            --hCursorDown stdout 1
+                            printCarta2 0 xs
+                        else do
+                            --hCursorBackward stdout 6
+                            putStr (printaLinha x ++ " " ++ show a)
+                            hCursorDown stdout 1
+                            hCursorBackward stdout 6
+                            printCarta2 0 xs
+                    else do
+                        putStr (printaLinha x)
+                        --hCursor
+
+printT2 :: Int -> [Carta] -> IO ()
+printT2 n [] = do
+                putStr "\n\n"
+printT2 n (x:xs) = do
+                 printCarta2 n x
+                 hCursorUp stdout 1
+                 hCursorForward stdout 8
+                 printT2 (n+1) xs
+
+
+
+------------------------------
+
 
 printTabuleiro :: Int -> [Carta] -> String
 printTabuleiro a [] = []
@@ -109,13 +163,14 @@ main = do
 
 gameLoop :: [Carta] -> [Carta] -> IO ()
 gameLoop tG tB = do
-  print "-------------------------------------" 
+  putStr "-------------------------------------------------------------------------------------------------\n" 
   if (not (restaCartas tG))
   then do
         --putStr (printBoard gb)
         print "Voce Venceu!!!"
     else do
-        putStr (printTabuleiro 1 tB)
+        printT2 1 tB
+        putStr "-------------------------------------------------------------------------------------------------\n" 
         print "Qual carta voce quer virar?"
         putStr "Digite uma linha: "
         carta1 <- getLine
@@ -127,7 +182,9 @@ gameLoop tG tB = do
             if (temCarta c1 tG)
             then do
                 --putStr ("TEM CARTA! " ++ soPrinta c1 ++ "\n")
-                putStr (printTabuleiro 1 (revela1Carta c1 tG tB)) 
+                putStr "-------------------------------------------------------------------------------------------------\n" 
+                printT2 1 (revela1Carta c1 tG tB)
+                putStr "-------------------------------------------------------------------------------------------------\n" 
                 print "Qual outra carta voce quer virar?"
                 putStr "Digite uma linha: "
                 carta2 <- getLine
@@ -137,15 +194,17 @@ gameLoop tG tB = do
                 then do
                     if (temCarta c2 tG)
                     then do
-                        putStr (printTabuleiro 1 (revela2Carta c1 c2 tG tB))
+                        putStr "-------------------------------------------------------------------------------------------------\n" 
+                        printT2 1 (revela2Carta c1 c2 tG tB)
+                        putStr "-------------------------------------------------------------------------------------------------\n" 
                         if (comparaCartas (retornaCarta c1 tG) (retornaCarta c2 tG))
                         then do
-                            putStr ("AS CARTA SAO IGUAL")
+                            putStr ("AS CARTA SAO IGUAL\n")
                             print "Pressione qualquer tecla para continuar..."
                             x <- getLine
                             gameLoop (removeCartas c1 c2 tG) (removeCartas c1 c2 tB)
                         else do
-                            putStr ("AS CARTA NAO SAO IGUAL")
+                            putStr ("AS CARTA NAO SAO IGUAL\n")
                             print "Pressione qualquer tecla para continuar..."
                             x <- getLine
                             gameLoop tG tB
